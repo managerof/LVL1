@@ -1,0 +1,27 @@
+lvl1
+
+autonomous arithmetic evaluation
+
+task1
+--
+two number addition
+--
+program flow:
+start
+if last state (problem) is today
+  then ask for solution
+else
+  show a new problem, save state, and exit
+
+
+task2
+--
+two number substraction
+
+task3
+--
+two number multiplication
+
+task4
+--
+two number division
