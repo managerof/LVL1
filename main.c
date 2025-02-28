@@ -127,7 +127,7 @@ void new_task(state_t *state)
     state->solved = 0;
     
     save_state(state);
-    printf("New equation for today: %d + %d = \n", state->eq.a, state->eq.b);
+    printf("New equation for today: %d + %d = ?\n", state->eq.a, state->eq.b);
 }
 
 /* Function to attempt solving the equation */
