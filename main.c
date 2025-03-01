@@ -12,6 +12,7 @@ typedef struct
     int a;
     int b;
     int c;
+    char operation;
 } equation_t;
 
 /* Structure to store a date */
@@ -78,6 +79,7 @@ void load_state(state_t *state)
         state->eq.a = 0;
         state->eq.b = 0;
         state->eq.c = 0;
+        state->eq.operation = 0;
         state->date.year = 0;
         state->date.month = 0;
         state->date.day = 0;
@@ -105,29 +107,120 @@ void save_state(state_t *state)
     fclose(file);
 }
 
-/* Generate a new equation based on difficulty */
-void new_task(state_t *state) 
+int is_valid_operation(char op)
 {
-    int difficulty, mod;
+    switch (op)
+    {
+        case '+':
+            return 1;
+            break;
+        case '-':
+            return 1;
+            break;
+        case '*':
+            return 1;
+            break;
+        case '/':
+            return 1;
+            break;
+        default:
+            return 0;
+    }
+}
+
+char input_operation()
+{
+    char operation;
+    int  is_valid;
+
+    /* Prompt until a valid operation (+ or -) is provided */
+    while (1) {
+        printf("Choose arithmetic operation (+, -, *, /): ");
+        myinput(" %c", &operation); /* The space before %c is to skip any whitespace */
+        
+        is_valid = is_valid_operation(operation);
+
+        if (is_valid)
+        {
+            return operation;
+        }
+
+        printf("Invalid operation. Please enter ('+', '-', '*', '/').\n");
+    };
+}
+
+int input_difficulty()
+{
+    int difficulty;
+
+    /* Prompt until a valid difficulty (number of digits, minimum 1) is provided */
+    do {
+        printf("Set difficulty (number of digits, must be >= 1): ");
+        myinput("%d", &difficulty);
+        if (difficulty < 1) {
+            printf("Difficulty must be at least 1 digit.\n");
+        }
+    } while (difficulty < 1);
+
+    return difficulty;
+}
+
+void handle_operation(equation_t* eq)
+{
+    switch (eq->operation)
+    {
+        case '+':
+            eq->c = eq->a + eq->b;
+            break;
+        case '-':
+            eq->c = eq->a - eq->b;
+            break;
+        case '*':
+            eq->c = eq->a * eq->b;
+            break;
+        case '/':
+            eq->c = eq->a / eq->b;
+            break;
+        default:
+            exit(1);
+    }
+}
+
+/* Generate a new equation based on difficulty and operation preferences */
+void new_task(state_t *state)
+{
+    char operation;
+    int difficulty, mod, iter;
     equation_t new_eq;
 
-    printf("Set difficulty (number of digits): ");
-    myinput("%d", &difficulty);
+    operation  = input_operation();
+    difficulty = input_difficulty();
 
-    mod = 10;
-    while (difficulty-- > 1) { mod *= 10; }
+    /* Compute modulus based on difficulty (e.g., difficulty 3 => mod = 1000) */
+    mod = 1;
+    for (iter = 0; iter < difficulty; iter++)
+    {
+        mod *= 10;
+    }
 
-    srand(time(0));
+    /* Seed the random number generator (ideally do this once in your program) */
+    srand(time(NULL));
 
+    /* Generate random operands within the computed range */
     new_eq.a = rand() % mod;
     new_eq.b = rand() % mod;
-    new_eq.c = new_eq.a + new_eq.b;
+    new_eq.operation = operation;
 
+    /* Compute the result based on the selected operation */
+    handle_operation(&new_eq);
+
+    /* Update state and save the new equation */
     state->eq = new_eq;
     state->solved = 0;
-    
     save_state(state);
-    printf("New equation for today: %d + %d = ?\n", state->eq.a, state->eq.b);
+
+    /* Display the new equation (using new_eq.operation for clarity) */
+    printf("New equation for today: %d %c %d = ?\n", new_eq.a, new_eq.operation, new_eq.b);
 }
 
 /* Function to attempt solving the equation */
@@ -138,7 +231,7 @@ void attempt_task(state_t *state)
 
     while (input != state->eq.c && attempts > 0) 
     {
-        printf("%d + %d = ", state->eq.a, state->eq.b);
+        printf("%d %c %d = ", state->eq.a, state->eq.operation, state->eq.b);
         myinput("%d", &input);
     
         if (input == state->eq.c) 
