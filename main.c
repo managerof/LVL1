@@ -276,21 +276,56 @@ void zero_file(const char *filename, size_t size)
     fclose(file);
 }
 
+void new_addition_task(state_t *state, char operation, int digits)
+{
+    int difficulty, mod, iter;
+    equation_t new_eq;
+
+    operation  = operation;
+    difficulty = digits;
+
+    /* Compute modulus based on difficulty (e.g., difficulty 3 => mod = 1000) */
+    mod = 1;
+    for (iter = 0; iter < difficulty; iter++)
+    {
+        mod *= 10;
+    }
+
+    /* Seed the random number generator (ideally do this once in your program) */
+    srand(time(NULL));
+
+    /* Generate random operands within the computed range */
+    new_eq.a = rand() % mod;
+    new_eq.b = rand() % mod;
+    new_eq.operation = operation;
+
+    /* Compute the result based on the selected operation */
+    handle_operation(&new_eq);
+
+    /* Update state and save the new equation */
+    state->eq = new_eq;
+    state->solved = 0;
+
+    save_state(state);
+}
 /* Handle command-line arguments */
 void handle_cli(int argc, char *argv[])
 {
     int opt;
+    char *task_arg = NULL;
+    char operation;
+    int digits = 0;
     
-    while ((opt = getopt(argc, argv, "hcdn")) != -1)
+    while ((opt = getopt(argc, argv, "hcdt:")) != -1)
     {
         switch (opt)
         {
             case 'h':
-                printf("Usage: %s [-c] [-n digits] [-d]\n", argv[0]);
+                printf("Usage: %s [-c] [-d] [-t operation:digits]\n", argv[0]);
                 printf("Options:\n");
                 printf("    -c            Zero \"%s\" file\n", STORAGE_FILENAME);
                 printf("    -d            Delete \"%s\" file\n", STORAGE_FILENAME);
-                printf("    -n NUMBER     Create new unsolved equation with numbers with NUMBER of digits\n");
+                printf("    -t OP:DIGITS  Create new task with operation OP and numbers with DIGITS digits\n");
                 break;
             case 'c':
                 zero_file(STORAGE_FILENAME, sizeof(state_t));
@@ -301,17 +336,29 @@ void handle_cli(int argc, char *argv[])
                 else
                     printf("Error deleting file: %s\n", STORAGE_FILENAME);
                 break;
-            case 'n':
-                printf("Option -n enabled! But not yet implemented in CLI.\n");
+            case 't':
+                task_arg = optarg;
+                if (sscanf(task_arg, "%c:%d", &operation, &digits) == 2)
+                {
+                    state_t state;
+                    new_addition_task(&state, operation, digits);
+                }
+                else
+                {
+                    fprintf(stderr, "Invalid format for -t. Use: operation:digits (e.g., +:3)\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case '?':
                 fprintf(stderr, "Unknown option -%c!\n", optopt);
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-c] [-d] [-n NUMBER]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-c] [-d] [-t OP:DIGITS]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
+
+
 }
 
 /* Main function */
