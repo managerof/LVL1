@@ -186,6 +186,11 @@ void handle_operation(equation_t* eq)
     }
 }
 
+void display_equation(equation_t eq)
+{
+    printf("New equation for today: %d %c %d = ?\n", eq.a, eq.operation, eq.b);
+}
+
 /* Generate a new equation based on difficulty and operation preferences */
 void new_task(state_t *state)
 {
@@ -219,8 +224,7 @@ void new_task(state_t *state)
     state->solved = 0;
     save_state(state);
 
-    /* Display the new equation (using new_eq.operation for clarity) */
-    printf("New equation for today: %d %c %d = ?\n", new_eq.a, new_eq.operation, new_eq.b);
+    display_equation(new_eq);
 }
 
 /* Function to attempt solving the equation */
@@ -307,6 +311,8 @@ void new_addition_task(state_t *state, char operation, int digits)
     state->solved = 0;
 
     save_state(state);
+
+    display_equation(new_eq);
 }
 /* Handle command-line arguments */
 void handle_cli(int argc, char *argv[])
